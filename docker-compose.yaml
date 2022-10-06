@@ -1,0 +1,32 @@
+version: "3"
+services:
+  library:
+    image: postgres:14.5
+    environment:
+      POSTGRES_USER: "KULIKOV_204"
+      POSTGRES_PASSWORD: "KULIKOV_204"
+      POSTGRES_DB: "KULIKOV_204"
+    ports:
+      - "5430:5432"
+    volumes:
+      - ./docker/db/config/library.sql:/docker-entrypoint-initdb.d/init.sql
+  stations:
+    image: postgres:14.5
+    environment:
+      POSTGRES_USER: "KULIKOV_204"
+      POSTGRES_PASSWORD: "KULIKOV_204"
+      POSTGRES_DB: "KULIKOV_204"
+    ports:
+      - "5431:5432"
+    volumes:
+      - ./docker/db/config/stations.sql:/docker-entrypoint-initdb.d/init.sql
+  hospital:
+    image: postgres:14.5
+    environment:
+      POSTGRES_USER: "KULIKOV_204"
+      POSTGRES_PASSWORD: "KULIKOV_204"
+      POSTGRES_DB: "KULIKOV_204"
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./docker/db/config/hospital.sql:/docker-entrypoint-initdb.d/init.sql
