@@ -23,7 +23,7 @@ services:
       - "5431:5432"
     volumes:
       - ./docker/db/config/stations.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./docker/db/data/library:/var/lib/postgresql/data/stations
+      - ./docker/db/data/stations:/var/lib/postgresql/data/stations
   hospital:
     image: postgres:14.5
     environment:
@@ -35,4 +35,4 @@ services:
       - "5433:5432"
     volumes:
       - ./docker/db/config/hospital.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./docker/db/data/library:/var/lib/postgresql/data/hospital
+      - ./docker/db/data/hospital:/var/lib/postgresql/data/hospital
