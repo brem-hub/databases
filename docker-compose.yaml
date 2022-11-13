@@ -1,0 +1,61 @@
+version: "3"
+services:
+  # Main service launching the PostgreSQL database.
+  # I don't put the sql script with CREATE clauses to initdb, because we want to use migration tools.
+  #  
+  db:
+    image: postgres:14.5
+    environment:
+      POSTGRES_USER: "KULIKOV_204"
+      POSTGRES_PASSWORD: "KULIKOV_204"
+      POSTGRES_DB: "KULIKOV_204"
+      PGDATA: /var/lib/postgresql/data/main/
+    ports:
+      - "5430:5432"
+    volumes:
+      - ./docker/db/data/main:/var/lib/postgresql/data/main
+  # Migrations service performs migration.
+  # I'm using yandex tool pgmigrate as it allows versioning.
+  # The better solution would be to create custom container, that has installed yandex-pgmigrate, 
+  #  but I install it with command for simplicity.
+  migrations:
+    image: python
+    command: > 
+      bash -c "pip3 install yandex-pgmigrate &&
+               cd /app/ && python3 -m pgmigrate -t 1 migrate"
+    # Make migrations folder and pgmigrate settings available within the container. 
+    volumes:
+      - ./migrations.yml:/app/migrations.yml
+      - ./migrations/:/app/migrations/
+    # Technically, it does not us from the situation where database lauches after pgmigrate tries to connect to it,
+    #  but it works, bacause for the first launch this container has to install python packages and it takes some time.
+    depends_on:
+      - db
+  # Seeder service seed database using custom script.
+  seeder:
+    image: python
+    # Override settings for the script.
+    environment:
+      # The host is the name of the service with the database. 
+      PGHOST: db
+      # Because we connect to the container explicitally, we use the port of the database, not the exposed port.
+      PGPORT: 5432
+      # This setting allows for changing the default number of entities that the seeder generates.
+      # Default: 10
+      # NOTE: creating 100+ entities takes some time.
+      NUMBER_OF_ENTITIES: 10
+    # Similar to `migrations` service, the better solution would be to create custom container, but the sake of simplicity,
+    #  I install required packages within startup command.
+    # Sleep is required because there is a possibility, that `migrations` service finishes its execution after `seeder` is executed.
+    # 10 seconds is definitely enough for `migrations` service to finish. 
+    command: >
+      bash -c "cd /app &&
+               pip3 install -r requirements.txt &&
+               sleep 10 &&
+               python seeder.py"
+    # Access to settings and the script source code.
+    volumes:
+      - ./requirements.txt:/app/requirements.txt
+      - ./seeder.py/:/app/seeder.py
+    depends_on:
+      - migrations
